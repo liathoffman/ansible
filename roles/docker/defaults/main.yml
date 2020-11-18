@@ -1,2 +1,7 @@
 ---
 # defaults file for docker
+
+  hosts: web
+  remote_user: ubuntu
+  become_method: sudo
+  become_user: root
