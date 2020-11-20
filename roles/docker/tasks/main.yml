@@ -1,53 +1,83 @@
 ---
 # tasks file for docker
 
-- name: install required packages
+- name: install required packages for Ubuntu
   package:
     name: "{{ item }}"
     state: present
-  loop: ['apt-transport-https', 'ca-certificates', 'curl', 'gnupg-agent', 'software-properties-common']
+  loop: ['apt-transport-https', 'ca-certificates', 'curl', 'gnupg-agent', 'software-properties-common', 'python-setuptools', 'python3-pip', 'python-pip']
+  become: yes
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
 
 - name: add docker official gpg key
   apt_key: 
     url: https://download.docker.com/linux/ubuntu/gpg
     state: present
   become: yes
+  when:  ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
 
 - name: check fingerprint
   command: apt-key fingerprint 0EBFCD88
   register: fingerprint_result
+  when:  ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
   
 - name: print stdout for fingerprint
   debug:
     msg: "{{fingerprint_result}}"
+  when:  ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
       
 - name: add docker apt repo
   apt_repository:
     repo: deb [arch=amd64] https://download.docker.com/linux/{{ansible_distribution|lower}} {{ansible_distribution_release}} stable
     state: present
+  when:  ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
 
-- name: install docker
+- name: install docker on ubuntu
   package: 
     name: docker-ce
     state: present
   register: result
+  become: yes
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
     
 - name: restart docker if changes were made
   service:
     name: docker
     state: started
-  become: true
-  when: result.changed
+  become: yes
+  when: result.changed and ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
 
-- name: Adding ubuntu user to docker group
+- name: Adding user to docker group
   user:
     name: ubuntu
     groups: docker
     append: yes
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
   
 - name: stop old docker container
   shell: docker stop $(docker ps -aq)
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
 
-- name: adding required shell command to install nginx
-  shell:
-    cmd: docker run -d -p 8080:80 nginx
+- name: cleanup docker-py to ensure no errors
+  pip:
+    name: docker-py
+    state: absent
+  become: yes
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: install docker container module dependencies
+  pip:
+    name: docker-py
+    state: present
+  become: yes
+    
+
+- name: using docker module to start the nginx container
+  community.general.docker_container:
+    name: nginx
+    image: nginx
+    exposed_ports: 8080:80
+    state: started
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+
