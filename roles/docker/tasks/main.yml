@@ -1,5 +1,5 @@
 ---
-# tasks file for docker
+# tasks file for docker for ubuntu
 
 - name: install required packages for Ubuntu
   package:
@@ -70,6 +70,7 @@
     name: docker-py
     state: present
   become: yes
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
     
 
 - name: using docker module to start the nginx container
@@ -79,5 +80,42 @@
     exposed_ports: 8080:80
     state: started
   when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+
+  # task files for installing docker on redhat
+
+- name: update dnf
+  shell:
+    cmd: dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+  become: yes
+  when: ansible_distribution == 'RedHat'
+
+- name: install docker-ce
+  shell:
+    cmd: dnf install docker-ce --nobest -y
+  become: yes
+  when: ansible_distribution == 'RedHat'
+
+- name: start docker
+  shell:
+    cmd: systemctl start docker
+  become: yes
+  when: ansible_distribution == 'RedHat'
+
+- name: enable docker
+  shell:
+    cmd: systemctl enable docker
+  become: yes
+  when: ansible_distribution == 'RedHat'
+
+- name: launch nginx
+  shell:
+    cmd: docker run --name mynginx1 -p 8080:80 -d nginx
+  become: yes
+  when: ansible_distribution == 'RedHat'
+
+
+
+
 
 
