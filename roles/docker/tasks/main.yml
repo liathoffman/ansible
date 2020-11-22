@@ -47,12 +47,20 @@
   become: yes
   when: result.changed and ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
 
-- name: Adding user to docker group
+- name: Adding user to docker group ubuntu
   user:
-    name: ubuntu
+    name: "{{ docker_users[0] }}"
     groups: docker
     append: yes
   when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: Adding user to docker group RedHat
+  user:
+    name: "{{ docker_users[1] }}"
+    groups: docker
+    append: yes
+  become: yes
+  when: ansible_distribution == 'RedHat'
   
 # here is where to add stop container if needed
 

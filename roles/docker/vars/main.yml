@@ -1,2 +1,6 @@
 ---
 # vars file for docker
+
+docker_users:
+  - 'ubuntu'
+  - 'ec2-user'
