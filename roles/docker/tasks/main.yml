@@ -54,9 +54,7 @@
     append: yes
   when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
   
-- name: stop old docker container
-  shell: docker stop $(docker ps -aq)
-  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+# here is where to add stop container if needed
 
 - name: cleanup docker-py to ensure no errors
   pip:
@@ -73,16 +71,15 @@
   when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
     
 
-- name: using docker module to start the nginx container
-  community.general.docker_container:
-    name: nginx
-    image: nginx
-    exposed_ports: 8080:80
-    state: started
-  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
-
-
   # task files for installing docker on redhat
+
+- name: install prerequesites for docker module
+  dnf:
+    name: "{{ item }}"
+    state: present
+  loop: ['python3-pip', 'python2-pip']
+  become: yes
+  when: ansible_distribution == 'RedHat'
 
 - name: update dnf
   shell:
@@ -108,11 +105,13 @@
   become: yes
   when: ansible_distribution == 'RedHat'
 
-- name: launch nginx
-  shell:
-    cmd: docker run --name mynginx1 -p 8080:80 -d nginx
+- name: using docker module to start the nginx container
+  community.general.docker_container:
+    name: nginx
+    image: nginx
+    exposed_ports: 8080:80
+    state: started
   become: yes
-  when: ansible_distribution == 'RedHat'
 
 
 
